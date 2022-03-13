@@ -1,0 +1,23 @@
+spring:
+  kafka:
+    bootstrap-servers: "localhost:9092"
+    consumer:
+      group-id: test-order_separation-consumer
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    template:
+      default-topic: order
+
+kafka:
+  stream:
+    order:
+      topic: order
+      stream:
+        separation:
+          application-id: order_separation
+          order-number-prefix: orderNumber-
+          cut-off-value: 1000
+          output-topic: order_greater_than_1000
