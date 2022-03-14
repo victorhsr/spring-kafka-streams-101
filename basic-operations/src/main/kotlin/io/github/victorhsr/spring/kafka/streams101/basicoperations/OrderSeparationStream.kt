@@ -1,4 +1,4 @@
-package io.github.spring.kafka.streams101.basicoperations
+package io.github.victorhsr.spring.kafka.streams101.basicoperations
 
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.kstream.KStream
