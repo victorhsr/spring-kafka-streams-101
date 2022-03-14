@@ -1,4 +1,4 @@
-package io.github.spring.kafka.streams1.basicoperations
+package io.github.spring.kafka.streams101.basicoperations
 
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.producer.ProducerRecord
