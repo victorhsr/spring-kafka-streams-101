@@ -1,0 +1,1 @@
+This project was based on the third video of the Kafka Streams 101 course by Confluent, link: https://developer.confluent.io/learn-kafka/kafka-streams/hands-on-basic-operations/
