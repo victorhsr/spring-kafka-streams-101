@@ -1,0 +1,10 @@
+{
+  "namespace": "io.github.victorhsr.spring.kafka.streams101.joins.schema",
+  "type": "record",
+  "name": "User",
+  "fields": [
+    {"name": "name", "type": "string"},
+    {"name": "address", "type": "string"},
+    {"name": "user_id", "type": "string"}
+  ]
+}
