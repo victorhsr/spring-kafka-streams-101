@@ -26,3 +26,5 @@ kafka:
       topic: electronic_order
     electronic_windowing:
       topic: electronic_windowing_result
+      window_size_minutes: 60
+      window_grace_minutes: 5
