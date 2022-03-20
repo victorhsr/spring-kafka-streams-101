@@ -72,6 +72,69 @@ internal class JoinStreamTest {
     @Test
     fun `should combine the electronic and appliance orders present in different KStreams and enrich the join result with the user name that is present in a KTable`() {
 
+        val mockData = this.createMockData()
+
+        // Users must be created first so the KTable records have earlier timestamps than the KStream records,
+        // otherwise the join will ignore them.
+        this.publishUserData(mockData.users)
+        this.publishElectronicOrderData(mockData.electronicOrders)
+        this.publishApplianceOrderData(mockData.applianceOrders)
+
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until({ this.testConsumer.receivedData() }, {
+            if (it.size != 2) return@until false
+
+            val userOne = mockData.users[0]
+            val userTwo = mockData.users[1]
+
+            val finalOrderUserOne = it[userOne.userId]
+            val finalOrderUserTwo = it[userTwo.userId]
+
+            if (finalOrderUserOne == null || finalOrderUserTwo == null) return@until false
+
+            val applianceOrderOne = mockData.applianceOrders[0]
+            val applianceOrderTwo = mockData.applianceOrders[1]
+            val electronicOrderOne = mockData.electronicOrders[0]
+            val electronicOrderTwo = mockData.electronicOrders[1]
+
+            finalOrderUserOne.applianceId == applianceOrderOne.applianceId && finalOrderUserOne.applianceOrderId == applianceOrderOne.orderId
+                    && finalOrderUserOne.electronicOrderId == electronicOrderOne.orderId
+                    && finalOrderUserTwo.applianceId == applianceOrderTwo.applianceId && finalOrderUserTwo.applianceOrderId == applianceOrderTwo.orderId
+                    && finalOrderUserTwo.electronicOrderId == electronicOrderTwo.orderId
+                    && finalOrderUserOne.userName == userOne.name && finalOrderUserTwo.userName == userTwo.name
+        })
+
+    }
+
+    private fun publishApplianceOrderData(applianceOrders: List<ApplianceOrder>) {
+        applianceOrders.forEach { applianceOrder: ApplianceOrder ->
+            val producerRecord =
+                ProducerRecord<String, SpecificRecord>(this.applianceOrderTopic, applianceOrder.userId, applianceOrder)
+            this.producer.send(producerRecord)
+        }
+    }
+
+    private fun publishElectronicOrderData(electronicOrders: List<ElectronicOrder>) {
+        electronicOrders.forEach { electronicOrder: ElectronicOrder ->
+            val producerRecord =
+                ProducerRecord<String, SpecificRecord>(
+                    this.electronicOrderTopic,
+                    electronicOrder.userId,
+                    electronicOrder
+                )
+            this.producer.send(producerRecord)
+        }
+    }
+
+    private fun publishUserData(users: List<User>) {
+        users.forEach { user: User ->
+            val producerRecord: ProducerRecord<String, SpecificRecord> =
+                ProducerRecord(this.userTopic, user.userId, user)
+            this.producer.send(producerRecord)
+        }
+    }
+
+    private fun createMockData(): MockDataWrapper {
+
         val userOneId = "10261998"
         val userTwoId = "10261999"
         val applianceOrderOne = ApplianceOrder.newBuilder()
@@ -85,7 +148,6 @@ internal class JoinStreamTest {
             .setOrderId("remodel-2")
             .setUserId(userTwoId)
             .setTime(Instant.now().toEpochMilli()).build()
-        val applianceOrders = listOf(applianceOrderOne, applianceOrderTwo)
 
         val electronicOrderOne = ElectronicOrder.newBuilder()
             .setElectronicId("television-2333")
@@ -99,56 +161,26 @@ internal class JoinStreamTest {
             .setUserId(userTwoId)
             .setTime(Instant.now().toEpochMilli()).build()
 
-        val electronicOrders = listOf(electronicOrderOne, electronicOrderTwo)
 
         val userOne: User =
             User.newBuilder().setUserId("10261998").setAddress("5405 6th Avenue").setName("Elizabeth Jones").build()
         val userTwo: User =
             User.newBuilder().setUserId("10261999").setAddress("407 64th Street").setName("Art Vandelay").build()
 
+        val applianceOrders = listOf(applianceOrderOne, applianceOrderTwo)
+        val electronicOrders = listOf(electronicOrderOne, electronicOrderTwo)
         val users = listOf(userOne, userTwo)
 
-        // Users must be created first so the KTable records have earlier timestamps than the KStream records,
-        // otherwise the join will ignore them.
-        users.forEach { user: User ->
-            val producerRecord: ProducerRecord<String, SpecificRecord> =
-                ProducerRecord(this.userTopic, user.userId, user)
-            this.producer.send(producerRecord)
-        }
-
-        applianceOrders.forEach { applianceOrder: ApplianceOrder ->
-            val producerRecord =
-                ProducerRecord<String, SpecificRecord>(this.applianceOrderTopic, applianceOrder.userId, applianceOrder)
-            this.producer.send(producerRecord)
-        }
-
-        electronicOrders.forEach { electronicOrder: ElectronicOrder ->
-            val producerRecord =
-                ProducerRecord<String, SpecificRecord>(
-                    this.electronicOrderTopic,
-                    electronicOrder.userId,
-                    electronicOrder
-                )
-            this.producer.send(producerRecord)
-        }
-
-        Awaitility.await().atMost(15, TimeUnit.SECONDS).until({ this.testConsumer.receivedData() }, {
-            if (it.size != 2) return@until false
-
-            val finalOrderUserOne = it[userOneId]
-            val finalOrderUserTwo = it[userTwoId]
-
-            if (finalOrderUserOne == null || finalOrderUserTwo == null) return@until false
-
-            finalOrderUserOne.applianceId == applianceOrderOne.applianceId && finalOrderUserOne.applianceOrderId == applianceOrderOne.orderId
-                    && finalOrderUserOne.electronicOrderId == electronicOrderOne.orderId
-                    && finalOrderUserTwo.applianceId == applianceOrderTwo.applianceId && finalOrderUserTwo.applianceOrderId == applianceOrderTwo.orderId
-                    && finalOrderUserTwo.electronicOrderId == electronicOrderTwo.orderId
-        })
-
+        return MockDataWrapper(electronicOrders, applianceOrders, users)
     }
 
 }
+
+data class MockDataWrapper(
+    val electronicOrders: List<ElectronicOrder>,
+    val applianceOrders: List<ApplianceOrder>,
+    val users: List<User>
+)
 
 class KDockerComposeContainer(file: File) : DockerComposeContainer<KDockerComposeContainer>(file)
 
