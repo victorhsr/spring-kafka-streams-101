@@ -67,10 +67,7 @@ internal class AggregationStreamTest {
         val electronicOrders = this.initOrders()
         this.publishOrders(electronicOrders)
 
-        val expectedResult = electronicOrders
-            .groupBy { order -> order.electronicId }
-            .mapValues { entry -> entry.value.map { it.price }.fold(0.0) { acc, orderPrice -> acc + orderPrice } }
-
+        val expectedResult = calcExpectedResult(electronicOrders)
 
         Awaitility.await().atMost(15, TimeUnit.SECONDS).until({ this.testConsumer.receivedData() }, {
             if (it.size != expectedResult.size) return@until false
@@ -80,6 +77,12 @@ internal class AggregationStreamTest {
             }
         })
 
+    }
+
+    private fun calcExpectedResult(electronicOrders: List<ElectronicOrder>): Map<String, Double> {
+        return electronicOrders
+            .groupBy { order -> order.electronicId }
+            .mapValues { entry -> entry.value.map { it.price }.fold(0.0) { acc, orderPrice -> acc + orderPrice } }
     }
 
     private fun initOrders(): List<ElectronicOrder> {
