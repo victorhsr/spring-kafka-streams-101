@@ -16,7 +16,7 @@ class OrderSeparationStream(
 ) {
 
     companion object {
-        private val LOGGER = LoggerFactory.getLogger(OrderSeparationStream.javaClass)
+        private val LOGGER = LoggerFactory.getLogger(OrderSeparationStream::class.java)
     }
 
     @Bean

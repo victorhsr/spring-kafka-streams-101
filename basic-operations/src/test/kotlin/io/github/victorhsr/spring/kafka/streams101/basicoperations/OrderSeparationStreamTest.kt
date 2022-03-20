@@ -32,6 +32,7 @@ internal class OrderSeparationStreamTest {
 
     @Value("\${kafka.stream.order.topic}")
     private lateinit var orderTopic: String
+
     @Value("\${kafka.stream.order.stream.separation.order-number-prefix}")
     private lateinit var orderNumberPrefix: String
 
@@ -54,7 +55,7 @@ internal class OrderSeparationStreamTest {
         messages.forEach { this.producer.send(ProducerRecord(orderTopic, null, it)) }
 
         Awaitility.await().atMost(3, TimeUnit.SECONDS)
-            .until({ orderNumbersList }, { this.consumer.receivedMessages().containsAll(it) })
+            .until({ this.consumer.receivedMessages() }, { it.containsAll(orderNumbersList) })
     }
 
 }
