@@ -1,4 +1,4 @@
-package io.github.victorhsr.spring.kafka.streams101
+package io.github.victorhsr.spring.kafka.streams101.ktable
 
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.common.utils.Bytes

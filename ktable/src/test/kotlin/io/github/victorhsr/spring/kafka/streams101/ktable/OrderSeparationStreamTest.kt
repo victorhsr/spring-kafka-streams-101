@@ -1,4 +1,4 @@
-package io.github.victorhsr.spring.kafka.streams101
+package io.github.victorhsr.spring.kafka.streams101.ktable
 
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.awaitility.Awaitility
@@ -39,7 +39,7 @@ internal class OrderSeparationStreamTest {
     private lateinit var orderNumberPrefix: String
 
     @Test
-    fun `should read the messages published in the topic 'order', put the records in a KTable, remove the ones that don't start with the prefix 'orderNumber-' and end with a numeric value greater than 1000, strip the prefix from the remaining messages and then publish the last value into 'last_order_greater_than_1000' topic`() {
+    fun `the topology should take some order-messages, and push the last numeric value greater than 1000 present in the end of the message to, the output topic`() {
 
         val lastOrderNumber = "8400"
         val messages = mutableListOf(
@@ -52,9 +52,8 @@ internal class OrderSeparationStreamTest {
         messages.add(messages.size, "${orderNumberPrefix}${lastOrderNumber}")
 
         messages.forEach { this.producer.send(ProducerRecord(this.orderTopic, "order-key", it)) }
-        println("messages sent")
 
-        Awaitility.await().atMost(35, TimeUnit.SECONDS)
+        Awaitility.await().atMost(3, TimeUnit.SECONDS)
             .until({ this.consumer.receivedMessages() }, { it.size == 1 && it[0] == lastOrderNumber })
     }
 
