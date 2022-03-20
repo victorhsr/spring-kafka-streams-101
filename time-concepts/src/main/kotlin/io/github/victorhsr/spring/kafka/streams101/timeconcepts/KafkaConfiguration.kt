@@ -29,7 +29,7 @@ class KafkaConfiguration {
             StreamsConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
             StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG to Serdes.String().javaClass.name,
             StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG to Serdes.String().javaClass.name,
-            StreamsConfig.COMMIT_INTERVAL_MS_CONFIG to 10000,
+            StreamsConfig.COMMIT_INTERVAL_MS_CONFIG to 5000,
             AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG to schemaRegistryUrl
         )
 

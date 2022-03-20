@@ -24,26 +24,14 @@ internal class OneTimeConceptsStreamTest : AbstractWindowingIntegrationTest() {
         val mockOrdersWrapper = this.initOrders()
         this.publishOrders(mockOrdersWrapper.orders)
 
-        val firstWindowExpectedResults = mockOrdersWrapper.ordersFirstWindow
-            .groupBy { order -> order.electronicId }
-            .mapValues { entry -> entry.value.map { it.price }.fold(0.0) { acc, orderPrice -> acc + orderPrice } }
+        val firstWindowExpectedResults = this.calcExpectedResults(mockOrdersWrapper.ordersFirstWindow)
 
-        Awaitility.await().atMost(25, TimeUnit.SECONDS).until({ this.testConsumer.receivedData() }, {
+        Awaitility.await().atMost(12, TimeUnit.SECONDS).until({ this.testConsumer.receivedData() }, {
 
             if (it.keys.isEmpty()) return@until false
 
-            val firstWindowOK = firstWindowExpectedResults.all { entry ->
-                if (!it.containsKey(entry.key)) return@until false
-                val receivedResults = it[entry.key]!!
-
-                if (receivedResults.size > 1) return@until false
-
-                receivedResults[0] == entry.value
-            }
-
-            firstWindowOK
+            this.isExpectedWindowResult(firstWindowExpectedResults, it)
         })
-
     }
 
     override fun initOrders(): MockOrdersWrapper {

@@ -24,10 +24,10 @@ internal class TwoTimeConceptsStreamTest : AbstractWindowingIntegrationTest() {
         val mockOrdersWrapper = this.initOrders()
         this.publishOrders(mockOrdersWrapper.orders)
 
-        val firstWindowExpectedResults = this.groupAndSumOrderPrice(mockOrdersWrapper.ordersFirstWindow)
-        val secondWindowExpectedResults = this.groupAndSumOrderPrice(mockOrdersWrapper.ordersSecondWindow)
+        val firstWindowExpectedResults = this.calcExpectedResults(mockOrdersWrapper.ordersFirstWindow)
+        val secondWindowExpectedResults = this.calcExpectedResults(mockOrdersWrapper.ordersSecondWindow)
 
-        Awaitility.await().atMost(25, TimeUnit.SECONDS).until({ this.testConsumer.receivedData() }, {
+        Awaitility.await().atMost(12, TimeUnit.SECONDS).until({ this.testConsumer.receivedData() }, {
 
             if (it.keys.size != 2) return@until false
 
@@ -37,23 +37,6 @@ internal class TwoTimeConceptsStreamTest : AbstractWindowingIntegrationTest() {
             firstWindowOK && secondWindowOK
         })
 
-    }
-
-    private fun groupAndSumOrderPrice(orders: List<ElectronicOrder>) =
-        orders
-            .groupBy { order -> order.electronicId }
-            .mapValues { entry -> entry.value.map { it.price }.fold(0.0) { acc, orderPrice -> acc + orderPrice } }
-
-    private fun isExpectedWindowResult(
-        expectedResultForWindow: Map<String, Double>,
-        valuesToCheck: Map<String, List<Double>>
-    ): Boolean {
-        return expectedResultForWindow.all { entry ->
-            if (!valuesToCheck.containsKey(entry.key)) return false
-            val receivedResults = valuesToCheck[entry.key]!!
-
-            receivedResults.contains(entry.value)
-        }
     }
 
     override fun initOrders(): MockOrdersWrapper {

@@ -51,7 +51,7 @@ abstract class AbstractWindowingIntegrationTest {
     protected lateinit var electronicOrderTopic: String
 
     @Value("\${kafka.stream.electronic_windowing.window_size_minutes}")
-    protected  var windowSizeMinutes: Long? = null
+    protected var windowSizeMinutes: Long? = null
 
     @Value("\${kafka.stream.electronic_windowing.window_grace_minutes}")
     protected var windowGraceMinutes: Long? = null
@@ -60,10 +60,30 @@ abstract class AbstractWindowingIntegrationTest {
         orders.forEach { electronicOrder: ElectronicOrder ->
             val producerRecord = ProducerRecord<String, SpecificRecord>(
                 this.electronicOrderTopic,
+                0,
+                electronicOrder.time,
                 electronicOrder.electronicId,
                 electronicOrder
             )
             this.producer.send(producerRecord)
+        }
+    }
+
+    protected fun calcExpectedResults(orders: List<ElectronicOrder>): Map<String, Double> {
+        return orders
+            .groupBy { order -> order.electronicId }
+            .mapValues { entry -> entry.value.map { it.price }.fold(0.0) { acc, orderPrice -> acc + orderPrice } }
+    }
+
+    protected fun isExpectedWindowResult(
+        expectedResultForWindow: Map<String, Double>,
+        valuesToCheck: Map<String, List<Double>>
+    ): Boolean {
+        return expectedResultForWindow.all { expectedEntry ->
+            if (!valuesToCheck.containsKey(expectedEntry.key)) return false
+            val receivedResults = valuesToCheck[expectedEntry.key]!!
+
+            receivedResults.contains(expectedEntry.value)
         }
     }
 

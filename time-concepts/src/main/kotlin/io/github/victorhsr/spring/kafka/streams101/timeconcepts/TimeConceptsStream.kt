@@ -28,7 +28,7 @@ class TimeConceptsStream(
             TimestampExtractor { record, _ ->
                 val order = record.value() as ElectronicOrder
 
-                LOGGER.info("Extracting time of order {}")
+                LOGGER.info("Extracting time {} from order {}", order.time, order.orderId)
                 order.time
             }
     }
