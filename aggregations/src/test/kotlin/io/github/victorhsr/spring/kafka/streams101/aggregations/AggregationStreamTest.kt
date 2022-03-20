@@ -67,12 +67,9 @@ internal class AggregationStreamTest {
         val electronicOrders = this.initOrders()
         this.publishOrders(electronicOrders)
 
-        val expectedResult = electronicOrders
-            .groupBy { order -> order.electronicId }
-            .mapValues { entry -> entry.value.map { it.price }.fold(0.0) { acc, orderPrice -> acc + orderPrice } }
+        val expectedResult = this.calcExpectedResult(electronicOrders)
 
-
-        Awaitility.await().atMost(15, TimeUnit.SECONDS).until({ this.testConsumer.receivedData() }, {
+        Awaitility.await().atMost(5, TimeUnit.SECONDS).until({ this.testConsumer.receivedData() }, {
             if (it.size != expectedResult.size) return@until false
 
             it.all { receivedEntry ->
@@ -82,10 +79,16 @@ internal class AggregationStreamTest {
 
     }
 
+    private fun calcExpectedResult(electronicOrders: List<ElectronicOrder>): Map<String, Double> {
+        return electronicOrders
+            .groupBy { order -> order.electronicId }
+            .mapValues { entry -> entry.value.map { it.price }.fold(0.0) { acc, orderPrice -> acc + orderPrice } }
+    }
+
     private fun initOrders(): List<ElectronicOrder> {
 
         var instant = Instant.now()
-//        HDTV-2333 and value = 31499.629999999997
+
         val electronicOrderOne = ElectronicOrder.newBuilder()
             .setElectronicId("HDTV-2333")
             .setOrderId("instore-1")
