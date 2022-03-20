@@ -1,27 +1,4 @@
-spring:spring:
-  kafka:
-    bootstrap-servers: "localhost:9092"
-    consumer:
-      group-id: test-order_join-consumer
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-    template:
-      default-topic: order
-
-kafka:
-  stream:
-    user:
-      topic: user
-    appliance_order:
-      topic: appliance_order
-    electronic_order:
-      topic: electronic_order
-    combined_order:
-      topic: combined_order
-      join_windows_seconds: 1800
+spring:
   kafka:
     bootstrap-servers: "localhost:29092"
     properties:
